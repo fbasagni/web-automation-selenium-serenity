@@ -1,0 +1,62 @@
+name: BabyRefil - Testes Automatizados
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  # Permite disparar manualmente pela aba "Actions" no GitHub
+  workflow_dispatch:
+
+jobs:
+  testes:
+    name: Executar Testes Serenity
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Faz checkout do repositório
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      # 2. Configura o Java 8 (versão usada no projeto)
+      - name: Configurar Java 8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: maven
+
+      # 3. Instala Chrome + ChromeDriver compatíveis no runner Linux
+      - name: Configurar Chrome e ChromeDriver
+        uses: browser-actions/setup-chrome@v1
+        id: setup-chrome
+
+      # 4. Executa os testes via Maven em modo headless
+      #    - sobrescreve o chromedriver local (lib/chromedriver.exe é Windows)
+      #    - passa as switches de headless via propriedade do Maven
+      - name: Executar testes BabyRefil
+        run: |
+          mvn verify \
+            -Dwebdriver.driver=chrome \
+            -Dwebdriver.chrome.driver=$(which chromedriver) \
+            -Dchrome.switches="--headless,--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--window-size=1920,1080,--disable-infobars"
+
+      # 5. Publica o relatório Serenity como artefato para download
+      #    (sempre publica, mesmo se os testes falharem)
+      - name: Publicar relatório Serenity como artefato
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: relatorio-serenity-${{ github.run_number }}
+          path: target/site/serenity/
+          retention-days: 30
+
+      # 6. (Opcional) Publica o relatório no GitHub Pages
+      #    Requisito: habilitar GitHub Pages no repositório com source = branch "gh-pages"
+      - name: Publicar relatório no GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.ref == 'refs/heads/main' && always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: target/site/serenity/
+          destination_dir: relatorio

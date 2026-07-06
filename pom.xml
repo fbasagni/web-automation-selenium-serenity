@@ -13,31 +13,48 @@
         <project.java.version>1.8</project.java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <serenity.version>2.0.4</serenity.version>
-        <serenity.cucumber.version>1.9.15</serenity.cucumber.version>
+        <serenity.version>2.1.2</serenity.version>
+        <serenity.cucumber.version>2.1.2</serenity.cucumber.version>
         <webdriver.driver>chrome</webdriver.driver>
     </properties>
 
     <repositories>
         <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
             <id>central</id>
-            <name>bintray</name>
+            <name>Maven Central</name>
+            <url>https://repo1.maven.org/maven2</url>
+        </repository>
+        <repository>
+            <snapshots><enabled>false</enabled></snapshots>
+            <id>jcenter</id>
+            <name>JCenter (fallback para artefatos legados Serenity)</name>
             <url>https://jcenter.bintray.com</url>
         </repository>
     </repositories>
     <pluginRepositories>
         <pluginRepository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
             <id>central</id>
-            <name>bintray-plugins</name>
+            <name>Maven Central Plugins</name>
+            <url>https://repo1.maven.org/maven2</url>
+        </pluginRepository>
+        <pluginRepository>
+            <snapshots><enabled>false</enabled></snapshots>
+            <id>jcenter-plugins</id>
+            <name>JCenter Plugins (fallback)</name>
             <url>https://jcenter.bintray.com</url>
         </pluginRepository>
     </pluginRepositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Força cucumber-core 4.8.0: serenity-core puxa 2.4.0, mas serenity-cucumber4 precisa de 4.x -->
+            <dependency>
+                <groupId>io.cucumber</groupId>
+                <artifactId>cucumber-core</artifactId>
+                <version>4.8.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -48,7 +65,7 @@
         </dependency>
         <dependency>
             <groupId>net.serenity-bdd</groupId>
-            <artifactId>serenity-cucumber</artifactId>
+            <artifactId>serenity-cucumber4</artifactId>
             <version>${serenity.cucumber.version}</version>
             <scope>test</scope>
         </dependency>
@@ -75,21 +92,19 @@
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
         </dependency>
-        <dependency>
-            <groupId>com.microsoft.sqlserver</groupId>
-            <artifactId>sqljdbc4</artifactId>
-            <version>4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.2gis.winium</groupId>
-            <artifactId>winium-webdriver</artifactId>
-            <version>0.1.0-1</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.github.javafaker/javafaker -->
+        <!-- JavaFaker: geração de dados dinâmicos para testes -->
         <dependency>
             <groupId>com.github.javafaker</groupId>
             <artifactId>javafaker</artifactId>
             <version>1.0.2</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- WebDriverManager: gerencia automaticamente o chromedriver compatível com o Chrome instalado -->
+        <dependency>
+            <groupId>io.github.bonigarcia</groupId>
+            <artifactId>webdrivermanager</artifactId>
+            <version>5.6.3</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
