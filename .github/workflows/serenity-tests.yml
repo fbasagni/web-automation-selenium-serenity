@@ -41,7 +41,27 @@ jobs:
             -Dwebdriver.chrome.driver=$(which chromedriver) \
             -Dchrome.switches="--headless,--no-sandbox,--disable-dev-shm-usage,--disable-gpu,--window-size=1920,1080,--disable-infobars"
 
-      # 5. Publica o relatório Serenity como artefato para download
+      # 5. Publica o resumo Serenity direto na tela do workflow run (Job Summary)
+      - name: Publicar resumo Serenity no Job Summary
+        if: always()
+        run: |
+          echo "## Resultado dos testes Serenity" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat target/site/serenity/summary.txt >> $GITHUB_STEP_SUMMARY 2>/dev/null || echo "summary.txt nao encontrado" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      # 6. Publica os resultados JUnit/Failsafe como check run com detalhes por cenario
+      #    (aparece direto na aba "Checks" do run e no Job Summary, sem precisar baixar nada)
+      - name: Publicar relatorio de testes (JUnit)
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: 'target/failsafe-reports/TEST-*.xml'
+          check_name: 'Resultado dos testes BabyRefil'
+          fail_on_failure: false
+          require_tests: true
+
+      # 7. Publica o relatório Serenity completo como artefato para download
       #    (sempre publica, mesmo se os testes falharem)
       - name: Publicar relatório Serenity como artefato
         uses: actions/upload-artifact@v4
@@ -51,7 +71,7 @@ jobs:
           path: target/site/serenity/
           retention-days: 30
 
-      # 6. (Opcional) Publica o relatório no GitHub Pages
+      # 8. (Opcional) Publica o relatório no GitHub Pages
       #    Requisito: habilitar GitHub Pages no repositório com source = branch "gh-pages"
       - name: Publicar relatório no GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
